@@ -20,13 +20,22 @@ while True:
         elif menu_action == "2":
             title = input("Enter the title of the book you wish to check out: ").title()
             library_id = input("Please enter your library ID: ").strip()
-            book_operations.borrow_book(title, library_id)
+            if title.strip() == "" or library_id.strip() == "":
+                print("Either no title or no library ID was entered. Returning to the menu.")
+            else:
+                book_operations.borrow_book(title, library_id)
         elif menu_action == "3":
             title = input("Enter the title of the book you wish to return: ").title()
-            book_operations.return_book(title)
+            if title.strip() == "":
+                print("No title was entered. Returning to the menu.")
+            else:
+                book_operations.return_book(title)
         elif menu_action == "4":
             title = input("Enter the title of the book (or part of the title) you wish to look for: ").title()
-            book_operations.search_book(title)
+            if title.strip() == "":
+                print("Nothing was entered. Returning to the menu.")
+            else:
+                book_operations.search_book(title)
         elif menu_action == "5":
             book_operations.display_all_books()
     elif menu_action == "2":
@@ -39,16 +48,26 @@ while True:
                 user_operations.add_user(name)
         elif menu_action == "2":
             library_id = input("Please enter your library ID: ").strip()
-            user_operations.view_user(library_id)
+            if library_id.strip() == "":
+                print("No library ID was entered. Returning to the menu.")
+            else:
+                user_operations.view_user(library_id)
         elif menu_action == "3":
             user_operations.view_all_users()
     elif menu_action == "3":
         menu_action = input("\nAuthor Operations:\n1. Add a new author\n2. View author detais\n3. Display all authors\n")
         if menu_action == "1": 
-            author_operations.add_author()
+            author_name = input("Please enter the author's name: ").title()
+            if author_name.strip() == "":
+                print("No name was entered. Returning to the menu.")
+            else:
+                author_operations.add_author(author_name)
         elif menu_action == "2":
-            author_name = input("Please enter the author's name to search for: ").title()
-            author_operations.view_author_details(author_name)
+            author_name = input("Please enter the author's name (or part of the author's name) to search for: ").title()
+            if author_name.strip() == "":
+                print("No name was entered. Returning to the menu.")
+            else:
+                author_operations.view_author_details(author_name)
         elif menu_action == "3":
             author_operations.view_all_authors()
     elif menu_action == "4":

@@ -12,8 +12,7 @@ class UserOperations:
                 try:
                     cursor = conn.cursor()
                     cursor.execute(f"SELECT id from Users WHERE library_id = '{library_id}'")
-                    if cursor.fetchone() == None:
-                        print(f"{library_id} is not yet in use.")
+                    if cursor.fetchone() == None:   # This verifies that the library_id is not already in use in the database.
                         query = "INSERT INTO Users (name, library_id) VALUE (%s, %s)"
                         add_user = (name, library_id)
                         cursor.execute(query, add_user)
@@ -49,6 +48,7 @@ class UserOperations:
             finally:
                 cursor.close()
                 conn.close()
+
 
     def view_all_users(self):
         conn = connect_database()
