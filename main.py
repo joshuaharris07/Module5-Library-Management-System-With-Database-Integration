@@ -47,7 +47,7 @@ while True:
             else:
                 user_operations.add_user(name)
         elif menu_action == "2":
-            library_id = input("Please enter your library ID: ").strip()
+            library_id = input("Please enter the library ID: ").strip()
             if library_id.strip() == "":
                 print("No library ID was entered. Returning to the menu.")
             else:
