@@ -24,7 +24,7 @@ class BookOperations:
                     cursor.execute(f"SELECT id from Authors WHERE name = '{author_name}'")
                     if cursor.fetchone() == None:                       
                         print(f"{author_name} is not yet in the system.")
-                        author_operations.add_author(author_name)
+                        author_operations.add_author(author_name)      # If author is not in the database already, this is where they will be added in.
                         conn = connect_database()
                         if conn is not None:
                             try:
@@ -52,7 +52,7 @@ class BookOperations:
 
             while True:
                 publication_date = input("Enter the date the book was published in this format: YYYY-MM-DD: ") 
-                if not re.match(r"\d{4}-\d{2}-\d{2}$", publication_date):
+                if not re.match(r"\d{4}-\d{2}-\d{2}$", publication_date):   # Verifies publication_date input is formatted correctly.
                     print("Invalid format, please enter it as YYYY-MM-DD")
                 else:
                     break
@@ -83,37 +83,43 @@ class BookOperations:
         if conn is not None:
             try:
                 cursor = conn.cursor()
-                cursor.execute(f"SELECT id, availability from Books WHERE title = '{title}'")
-                for book in cursor.fetchall():
-                    (book_id, availability) = book
-                find_library_id = (library_id, )
-                query = "SELECT id, name from Users WHERE library_id = %s"
-                cursor.execute(query, find_library_id)
-                for user in cursor.fetchall():
-                    (user_id, user_name) = user
-
-                if availability == 1:
-                    cursor.execute(f"""
-                    UPDATE books 
-                    SET availability = '0'
-                    WHERE id = {book_id}
-                    """)
-                    conn.commit()
-            
-                    query = ("""
-                    INSERT INTO Borrowed_books (user_id, book_id, borrow_date, return_date) VALUES (%s, %s, %s, %s)
-                    """)
-                    return_date = date.today() + timedelta(weeks=3)
-                    borrow_book = (user_id, book_id, date.today(), return_date)
-                    cursor.execute(query, borrow_book)
-                    conn.commit()
-                    print(f"{user_name} has checked out {title}. The due date is {return_date}")
-
-                elif availability == 0:
-                    cursor.execute(f"SELECT return_date FROM borrowed_books WHERE book_id = {book_id}")
+                cursor.execute(f"SELECT id, availability from Books WHERE title = '{title}'")   
+                if cursor.fetchone() == None:       # Confirms if the book is in the library database.
+                    print("That book is not in our library system.")
+                
+                cursor.execute(f"SELECT id, name from Users WHERE library_id = {library_id}")   
+                if cursor.fetchone() == None:       # Confirms if the library ID is valid.
+                    print("That is an invalid library ID.")
+                else:
+                    cursor.execute(f"SELECT id, availability from Books WHERE title = '{title}'")
                     for book in cursor.fetchall():
-                        (return_date, ) = book
-                    print(f"{title} is not currently available. It should be returned by {return_date}") #TODO list when it should be available
+                        (book_id, availability) = book
+                    cursor.execute(f"SELECT id, name from Users WHERE library_id = {library_id}")
+                    for user in cursor.fetchall():
+                        (user_id, user_name) = user
+
+                    if availability == 1:
+                        cursor.execute(f"""
+                        UPDATE books 
+                        SET availability = '0'
+                        WHERE id = {book_id}
+                        """)            # This part marks the book table as it being unavailable.
+                        conn.commit()
+                
+                        query = ("""
+                        INSERT INTO Borrowed_books (user_id, book_id, borrow_date, return_date) VALUES (%s, %s, %s, %s)
+                        """)
+                        return_date = date.today() + timedelta(weeks=3)
+                        borrow_book = (user_id, book_id, date.today(), return_date)
+                        cursor.execute(query, borrow_book)      # This part adds the borrowed book information to the borrowed_book table.
+                        conn.commit()
+                        print(f"{user_name} has checked out {title}. The due date is {return_date}")
+
+                    elif availability == 0:
+                        cursor.execute(f"SELECT return_date FROM borrowed_books WHERE book_id = {book_id}")
+                        for book in cursor.fetchall():
+                            (return_date, ) = book
+                        print(f"{title} is not currently available. It should be returned by {return_date}") #TODO list when it should be available
 
             except Exception as e:
                 print(f"Error: {e}")
@@ -127,29 +133,33 @@ class BookOperations:
         conn = connect_database()
         if conn is not None:
             try:
-                cursor = conn.cursor()
-                cursor.execute(f"SELECT id, availability from Books WHERE title = '{title}'")
-                for book in cursor.fetchall():
-                    (book_id, availability) = book
-
-                if availability != 1:
-                    cursor.execute(f"""
-                    UPDATE Books 
-                    SET availability = '1'
-                    WHERE id = {book_id}
-                    """)
-                    conn.commit()
-                    
-                    cursor.execute(f"""
-                    DELETE FROM Borrowed_books
-                    WHERE book_id = {book_id}               
-                    """)
-                    conn.commit()
-
-                    print(f"{title} has been returned.")
-                
+                cursor = conn.cursor(buffered=True)
+                cursor.execute(f"SELECT id, availability from Books WHERE title = '{title}'")   #Confirms if the book is in the library database.
+                if cursor.fetchone() == None:
+                    print("That book is not in our library system.")
                 else:
-                    print(f"{title} was not previously checked out.")
+                    cursor.execute(f"SELECT id, availability from Books WHERE title = '{title}'")
+                    for book in cursor.fetchall():
+                        (book_id, availability) = book
+
+                    if availability != 1:
+                        cursor.execute(f"""
+                        UPDATE Books 
+                        SET availability = '1'
+                        WHERE id = {book_id}
+                        """)
+                        conn.commit()
+                        
+                        cursor.execute(f"""
+                        DELETE FROM Borrowed_books
+                        WHERE book_id = {book_id}               
+                        """)
+                        conn.commit()
+
+                        print(f"{title} has been returned.")
+                    
+                    else:
+                        print(f"{title} was not previously checked out.")
 
             except Exception as e:
                 print(f"Error: {e}")

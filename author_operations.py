@@ -42,10 +42,10 @@ class AuthorOperations:
                     """)  
                     for author in cursor.fetchall():
                         (author_id, author_name, biography) = author
-                        print(f"\nAuthor: {author_name}\nBiography: {biography}, {author_id}")
+                        print(f"\nAuthor: {author_name}\nBiography: {biography}")
                         cursor.execute(f"SELECT title from Books WHERE author_id = {author_id}")                
                         if cursor.fetchone() == None:
-                            print("No books in our library have been written by that author.")
+                            print(f"No books in our library have been written by {author_name}.")
                         else:
                             print(f"{author_name} has written the following books that are in our library:")
                             cursor.execute(f"SELECT title from Books WHERE author_id = {author_id}")    
